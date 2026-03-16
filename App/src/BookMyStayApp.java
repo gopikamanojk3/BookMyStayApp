@@ -1,86 +1,78 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Book My Stay - Hotel Booking Management System
  *
- * Use Case 4: Room Search & Availability Check
+ * Use Case 5: Booking Request (First-Come-First-Served)
  *
- * Demonstrates how guests can search available rooms
- * without modifying the inventory state.
+ * This program demonstrates how booking requests are collected
+ * and stored in a queue structure to preserve arrival order.
+ * No room allocation or inventory updates happen at this stage.
  *
  * @author Student
- * @version 4.0
+ * @version 5.0
  */
 public class BookMyStayApp {
 
-    // Room Domain Model
-    static class Room {
-        String type;
-        double price;
-        String amenities;
+    /**
+     * Reservation represents a guest booking request
+     */
+    static class Reservation {
+        String guestName;
+        String roomType;
 
-        Room(String type, double price, String amenities) {
-            this.type = type;
-            this.price = price;
-            this.amenities = amenities;
+        Reservation(String guestName, String roomType) {
+            this.guestName = guestName;
+            this.roomType = roomType;
+        }
+
+        public String toString() {
+            return "Guest: " + guestName + " | Room Type: " + roomType;
         }
     }
 
-    // Centralized Inventory
-    private Map<String, Integer> inventory = new HashMap<>();
+    // Booking request queue (FIFO)
+    private Queue<Reservation> bookingQueue = new LinkedList<>();
 
-    // Room Details
-    private Map<String, Room> roomCatalog = new HashMap<>();
-
-    // Constructor to initialize data
-    public BookMyStayApp() {
-
-        // Inventory setup
-        inventory.put("Single", 5);
-        inventory.put("Double", 2);
-        inventory.put("Suite", 0); // unavailable example
-
-        // Room catalog
-        roomCatalog.put("Single", new Room("Single", 100.0, "1 Bed, Free WiFi"));
-        roomCatalog.put("Double", new Room("Double", 180.0, "2 Beds, Free WiFi, TV"));
-        roomCatalog.put("Suite", new Room("Suite", 350.0, "King Bed, Living Area, Ocean View"));
+    /**
+     * Add a booking request to the queue
+     */
+    public void addBookingRequest(String guestName, String roomType) {
+        Reservation reservation = new Reservation(guestName, roomType);
+        bookingQueue.add(reservation);
+        System.out.println("Booking request received from " + guestName + " for " + roomType + " room.");
     }
 
-    // Read-only search method
-    public void searchAvailableRooms() {
+    /**
+     * Display all pending booking requests
+     */
+    public void displayBookingQueue() {
+        System.out.println("\nPending Booking Requests (FIFO Order):");
 
-        System.out.println("\nAvailable Rooms:\n");
-
-        for (String roomType : inventory.keySet()) {
-
-            int available = inventory.get(roomType);
-
-            // Defensive check (only show rooms with availability > 0)
-            if (available > 0) {
-
-                Room room = roomCatalog.get(roomType);
-
-                System.out.println("Room Type: " + room.type);
-                System.out.println("Price per night: $" + room.price);
-                System.out.println("Amenities: " + room.amenities);
-                System.out.println("Rooms Available: " + available);
-                System.out.println("-----------------------------------");
-            }
+        for (Reservation r : bookingQueue) {
+            System.out.println(r);
         }
     }
 
-    // Application Entry Point
+    /**
+     * Application entry point
+     */
     public static void main(String[] args) {
 
-        System.out.println("=================================");
-        System.out.println("Book My Stay - Room Search");
-        System.out.println("Version 4.0");
-        System.out.println("=================================");
+        System.out.println("=====================================");
+        System.out.println("Book My Stay - Booking Request Queue");
+        System.out.println("Version 5.0");
+        System.out.println("=====================================");
 
-        BookMyStayApp app = new BookMyStayApp();
+        BookMyStayApp system = new BookMyStayApp();
 
-        // Guest searches available rooms
-        app.searchAvailableRooms();
+        // Simulate booking requests
+        system.addBookingRequest("Alice", "Single");
+        system.addBookingRequest("Bob", "Double");
+        system.addBookingRequest("Charlie", "Suite");
+
+        // Display queued requests
+        system.displayBookingQueue();
     }
 }
