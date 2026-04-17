@@ -3,72 +3,86 @@ import java.util.*;
 /**
  * Book My Stay - Hotel Booking Management System
  *
- * Use Case 7: Add-On Service Selection
+ * Use Case 6: Room Allocation Processing
  */
 public class BookMyStayApp {
 
-    // Add-On Service class
-    static class Service {
-        String name;
-        double cost;
+    // Reservation class (same as your previous code)
+    static class Reservation {
+        String guestName;
+        String roomType;
 
-        Service(String name, double cost) {
-            this.name = name;
-            this.cost = cost;
+        Reservation(String guestName, String roomType) {
+            this.guestName = guestName;
+            this.roomType = roomType;
         }
     }
 
-    // Map: Reservation ID → List of Services
-    private Map<String, List<Service>> serviceMap = new HashMap<>();
+    // FIFO Queue
+    private Queue<Reservation> bookingQueue = new LinkedList<>();
 
-    /**
-     * Add service to reservation
-     */
-    public void addService(String reservationId, String serviceName, double cost) {
-        serviceMap.putIfAbsent(reservationId, new ArrayList<>());
-        serviceMap.get(reservationId).add(new Service(serviceName, cost));
+    // Inventory
+    private Map<String, Integer> inventory = new HashMap<>();
+
+    // Track room numbers per type (for sequential IDs)
+    private Map<String, Integer> roomCounters = new HashMap<>();
+
+    public BookMyStayApp() {
+        inventory.put("Single", 2);
+        inventory.put("Double", 2);
+        inventory.put("Suite", 1);
+
+        roomCounters.put("Single", 0);
+        roomCounters.put("Double", 0);
+        roomCounters.put("Suite", 0);
     }
 
-    /**
-     * Calculate total add-on cost
-     */
-    public double calculateTotalCost(String reservationId) {
-        double total = 0;
+    // Add booking request
+    public void addBookingRequest(String guestName, String roomType) {
+        bookingQueue.add(new Reservation(guestName, roomType));
+    }
 
-        List<Service> services = serviceMap.get(reservationId);
+    // Generate sequential Room ID (Single-1, Single-2, etc.)
+    private String generateRoomId(String roomType) {
+        int count = roomCounters.get(roomType) + 1;
+        roomCounters.put(roomType, count);
+        return roomType + "-" + count;
+    }
 
-        if (services != null) {
-            for (Service s : services) {
-                total += s.cost;
+    // Process bookings
+    public void processBookings() {
+        System.out.println("Room Allocation Processing\n");
+
+        while (!bookingQueue.isEmpty()) {
+            Reservation r = bookingQueue.poll();
+
+            if (inventory.getOrDefault(r.roomType, 0) > 0) {
+
+                String roomId = generateRoomId(r.roomType);
+
+                // Update inventory
+                inventory.put(r.roomType, inventory.get(r.roomType) - 1);
+
+                System.out.println("Booking confirmed for Guest: "
+                        + r.guestName + ", Room ID: " + roomId);
+
+            } else {
+                System.out.println("Booking failed for Guest: "
+                        + r.guestName + " (No rooms available)");
             }
         }
-
-        return total;
-    }
-
-    /**
-     * Display result
-     */
-    public void displayServices(String reservationId) {
-        System.out.println("Add-On Service Selection");
-        System.out.println("Reservation ID: " + reservationId);
-
-        double total = calculateTotalCost(reservationId);
-        System.out.println("Total Add-On Cost: " + total);
     }
 
     public static void main(String[] args) {
 
         BookMyStayApp system = new BookMyStayApp();
 
-        // Example reservation from previous use case
-        String reservationId = "Single-1";
+        // Sample input (same style)
+        system.addBookingRequest("Abhi", "Single");
+        system.addBookingRequest("Subha", "Single");
+        system.addBookingRequest("Vanmathi", "Suite");
 
-        // Add services
-        system.addService(reservationId, "Breakfast", 500);
-        system.addService(reservationId, "Spa", 1000);
-
-        // Display output
-        system.displayServices(reservationId);
+        // Process bookings
+        system.processBookings();
     }
 }
