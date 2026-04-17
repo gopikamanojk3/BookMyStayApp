@@ -1,50 +1,44 @@
-import java.util.*;
-import java.util.stream.Collectors;
+// Custom Exception for Invalid Booking
+class InvalidBookingException extends Exception {
+    public InvalidBookingException(String message) {
+        super(message);
+    }
+}
 
-/**
- * Train Consist Management App
- *
- * UC9: Group Bogies by Type using Collectors.groupingBy()
- */
-public class BookMyStayApp {
+// Booking Validator Class
+class BookingValidator {
+    private static final String[] VALID_ROOM_TYPES = {"Single", "Double", "Suite"};
 
-    // Bogie class
-    static class Bogie {
-        String name;   // e.g., Sleeper, AC Chair, First Class, Goods
-        String type;   // Passenger / Goods
-
-        Bogie(String name, String type) {
-            this.name = name;
-            this.type = type;
+    public static void validateBooking(String guestName, String roomType) throws InvalidBookingException {
+        if (guestName == null || guestName.trim().isEmpty()) {
+            throw new InvalidBookingException("Guest name cannot be empty.");
         }
 
-        public String toString() {
-            return name + " (" + type + ")";
+        boolean validRoom = false;
+        for (String validType : VALID_ROOM_TYPES) {
+            if (validType.equalsIgnoreCase(roomType)) {
+                validRoom = true;
+                break;
+            }
+        }
+
+        if (!validRoom) {
+            throw new InvalidBookingException("Invalid room type selected: " + roomType);
         }
     }
+}
 
+// Main Application Class
+public class BookMyStayApp {
     public static void main(String[] args) {
+        String guestName = "Abhisheak";
+        String roomType = "single"; // intentionally lowercase to test validation
 
-        // Step 1: Create list of bogies
-        List<Bogie> bogies = new ArrayList<>();
-
-        bogies.add(new Bogie("Sleeper", "Passenger"));
-        bogies.add(new Bogie("AC Chair", "Passenger"));
-        bogies.add(new Bogie("First Class", "Passenger"));
-        bogies.add(new Bogie("Sleeper", "Passenger")); // duplicate for grouping
-        bogies.add(new Bogie("Cylindrical", "Goods"));
-        bogies.add(new Bogie("Rectangular", "Goods"));
-
-        // Step 2: Convert to stream and group by bogie name
-        Map<String, List<Bogie>> groupedBogies =
-                bogies.stream()
-                        .collect(Collectors.groupingBy(b -> b.name));
-
-        // Step 3: Display grouped result
-        System.out.println("Grouped Bogies by Type:\n");
-
-        for (String key : groupedBogies.keySet()) {
-            System.out.println(key + " -> " + groupedBogies.get(key));
+        try {
+            BookingValidator.validateBooking(guestName, roomType);
+            System.out.println("Booking successful for " + guestName + " in " + roomType + " room.");
+        } catch (InvalidBookingException e) {
+            System.out.println("Booking failed: " + e.getMessage());
         }
     }
 }
