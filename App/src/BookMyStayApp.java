@@ -1,78 +1,74 @@
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 /**
  * Book My Stay - Hotel Booking Management System
  *
- * Use Case 5: Booking Request (First-Come-First-Served)
- *
- * This program demonstrates how booking requests are collected
- * and stored in a queue structure to preserve arrival order.
- * No room allocation or inventory updates happen at this stage.
- *
- * @author Student
- * @version 5.0
+ * Use Case 7: Add-On Service Selection
  */
 public class BookMyStayApp {
 
-    /**
-     * Reservation represents a guest booking request
-     */
-    static class Reservation {
-        String guestName;
-        String roomType;
+    // Add-On Service class
+    static class Service {
+        String name;
+        double cost;
 
-        Reservation(String guestName, String roomType) {
-            this.guestName = guestName;
-            this.roomType = roomType;
-        }
-
-        public String toString() {
-            return "Guest: " + guestName + " | Room Type: " + roomType;
+        Service(String name, double cost) {
+            this.name = name;
+            this.cost = cost;
         }
     }
 
-    // Booking request queue (FIFO)
-    private Queue<Reservation> bookingQueue = new LinkedList<>();
+    // Map: Reservation ID → List of Services
+    private Map<String, List<Service>> serviceMap = new HashMap<>();
 
     /**
-     * Add a booking request to the queue
+     * Add service to reservation
      */
-    public void addBookingRequest(String guestName, String roomType) {
-        Reservation reservation = new Reservation(guestName, roomType);
-        bookingQueue.add(reservation);
-        System.out.println("Booking request received from " + guestName + " for " + roomType + " room.");
+    public void addService(String reservationId, String serviceName, double cost) {
+        serviceMap.putIfAbsent(reservationId, new ArrayList<>());
+        serviceMap.get(reservationId).add(new Service(serviceName, cost));
     }
 
     /**
-     * Display all pending booking requests
+     * Calculate total add-on cost
      */
-    public void displayBookingQueue() {
-        System.out.println("\nPending Booking Requests (FIFO Order):");
+    public double calculateTotalCost(String reservationId) {
+        double total = 0;
 
-        for (Reservation r : bookingQueue) {
-            System.out.println(r);
+        List<Service> services = serviceMap.get(reservationId);
+
+        if (services != null) {
+            for (Service s : services) {
+                total += s.cost;
+            }
         }
+
+        return total;
     }
 
     /**
-     * Application entry point
+     * Display result
      */
+    public void displayServices(String reservationId) {
+        System.out.println("Add-On Service Selection");
+        System.out.println("Reservation ID: " + reservationId);
+
+        double total = calculateTotalCost(reservationId);
+        System.out.println("Total Add-On Cost: " + total);
+    }
+
     public static void main(String[] args) {
-
-        System.out.println("=====================================");
-        System.out.println("Book My Stay - Booking Request Queue");
-        System.out.println("Version 5.0");
-        System.out.println("=====================================");
 
         BookMyStayApp system = new BookMyStayApp();
 
-        // Simulate booking requests
-        system.addBookingRequest("Alice", "Single");
-        system.addBookingRequest("Bob", "Double");
-        system.addBookingRequest("Charlie", "Suite");
+        // Example reservation from previous use case
+        String reservationId = "Single-1";
 
-        // Display queued requests
-        system.displayBookingQueue();
+        // Add services
+        system.addService(reservationId, "Breakfast", 500);
+        system.addService(reservationId, "Spa", 1000);
+
+        // Display output
+        system.displayServices(reservationId);
     }
 }
