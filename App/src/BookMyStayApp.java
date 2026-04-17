@@ -1,40 +1,99 @@
 import java.util.*;
-import java.util.stream.*;
 
 /**
- * Train Consist Management App
+ * Book My Stay - Hotel Booking Management System
  *
- * UC10: Count Total Seats in Train using reduce()
+ * Use Case 11: Concurrent Booking Simulation (Thread Safety)
  */
 public class BookMyStayApp {
 
-    // Bogie class with seating capacity
-    static class Bogie {
-        String name;
-        int capacity;
+    // Reservation class
+    static class Reservation {
+        String guestName;
+        String roomType;
 
-        Bogie(String name, int capacity) {
-            this.name = name;
-            this.capacity = capacity;
+        Reservation(String guestName, String roomType) {
+            this.guestName = guestName;
+            this.roomType = roomType;
+        }
+    }
+
+    // Shared queue (FIFO)
+    private Queue<Reservation> bookingQueue = new LinkedList<>();
+
+    // Shared inventory
+    private Map<String, Integer> inventory = new HashMap<>();
+
+    // Room counters (for unique IDs)
+    private Map<String, Integer> roomCounters = new HashMap<>();
+
+    public BookMyStayApp() {
+        inventory.put("Single", 2);
+        inventory.put("Double", 1);
+
+        roomCounters.put("Single", 0);
+        roomCounters.put("Double", 0);
+    }
+
+    // Add booking request (synchronized for safety)
+    public synchronized void addBooking(String guestName, String roomType) {
+        bookingQueue.add(new Reservation(guestName, roomType));
+        System.out.println(guestName + " added booking request for " + roomType);
+    }
+
+    // Generate room ID
+    private String generateRoomId(String roomType) {
+        int count = roomCounters.get(roomType) + 1;
+        roomCounters.put(roomType, count);
+        return roomType + "-" + count;
+    }
+
+    // Critical section: allocation must be synchronized
+    public synchronized void processBooking() {
+
+        if (bookingQueue.isEmpty()) return;
+
+        Reservation r = bookingQueue.poll();
+
+        if (inventory.getOrDefault(r.roomType, 0) > 0) {
+
+            String roomId = generateRoomId(r.roomType);
+
+            // Update inventory safely
+            inventory.put(r.roomType, inventory.get(r.roomType) - 1);
+
+            System.out.println("Booking confirmed for " + r.guestName +
+                    " | Room ID: " + roomId);
+
+        } else {
+            System.out.println("Booking failed for " + r.guestName +
+                    " | No rooms available");
         }
     }
 
     public static void main(String[] args) {
 
-        // Step 1: Create list of bogies
-        List<Bogie> bogies = new ArrayList<>();
+        BookMyStayApp system = new BookMyStayApp();
 
-        bogies.add(new Bogie("Sleeper", 72));
-        bogies.add(new Bogie("AC Chair", 60));
-        bogies.add(new Bogie("First Class", 40));
-        bogies.add(new Bogie("Sleeper", 72));
+        // Create threads (simulating multiple users)
+        Thread t1 = new Thread(() -> {
+            system.addBooking("Alice", "Single");
+            system.processBooking();
+        });
 
-        // Step 2: Stream → map → reduce
-        int totalSeats = bogies.stream()
-                .map(b -> b.capacity)          // extract capacity
-                .reduce(0, Integer::sum);      // sum all values
+        Thread t2 = new Thread(() -> {
+            system.addBooking("Bob", "Single");
+            system.processBooking();
+        });
 
-        // Step 3: Display result
-        System.out.println("Total Seating Capacity: " + totalSeats);
+        Thread t3 = new Thread(() -> {
+            system.addBooking("Charlie", "Single");
+            system.processBooking();
+        });
+
+        // Start threads (concurrent execution)
+        t1.start();
+        t2.start();
+        t3.start();
     }
 }
